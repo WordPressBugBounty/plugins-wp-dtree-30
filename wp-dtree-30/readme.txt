@@ -4,7 +4,7 @@ Donate link: http://www.amazon.com/gp/registry/wishlist/2QB6SQ5XX2U0N/105-320918
 Tags: archive, navigation, category, tree, sidebar
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 4.5.0
+Stable tag: 4.5.1
 Requires PHP: 7.4
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -14,8 +14,6 @@ Collapsible navigation trees for archives, categories, pages, links, custom taxo
 == Description ==
 
 This plugin provides collapsible navigation trees for archives, categories, pages, links, custom taxonomies and menus. Use the widgets in a widget area or the template functions documented below. Archive trees can group posts by year and month.
-
-Version 4.5.0 fixes security issues and updates PHP and WordPress compatibility. It keeps the existing widgets, tree presentation and cache behavior. Existing tree caches rebuild automatically after upgrading.
 
 Requires WordPress 6.0 or later and PHP 7.4 or later.
 
@@ -80,10 +78,18 @@ They all return associative arrays with all arguments defaulted.
 
 == Upgrade Notice ==
 
+= 4.5.1 =
+Fixes which posts appear when limiting posts per month and reduces server work when building trees. Clear any separate page cache after upgrading.
+
 = 4.5.0 =
 Security update for stored/reflected XSS and settings CSRF. Requires WordPress 6.0 and PHP 7.4. Tree caches rebuild automatically; clear any separate page cache after upgrading.
 
 == Changelog ==
+
+= 4.5.1 =
+* Archive posts are now sorted before the monthly limit is applied.
+* Keep posts with matching dates or other sort values in a consistent order.
+* Reduce server work when building page, category and custom taxonomy trees.
 
 = 4.5.0 =
 * Fix stored and reflected cross-site scripting and protect settings changes against CSRF (CVE-2022-47423, CVE-2023-41662 and CVE-2023-41667).

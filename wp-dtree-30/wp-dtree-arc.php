@@ -14,6 +14,10 @@ function wpdt_get_archive_nodelist($args){ //get archive nodelist
 	$mpidcount = 0; 	
 	$count = ($showcount) ? ", count({$wpdb->posts}.ID) AS 'posts' ": '';
 	$limit = ($limit_posts > 0) ? " LIMIT {$limit_posts}" : '';
+	// Choose the requested subset inside each month, before LIMIT is applied.
+	// ID in the same direction makes equal sort values deterministic.
+	$result_order = "{$sortby} {$sort_order}" . ($sortby === 'ID' ? '' : ", ID {$sort_order}");
+	$month_order = $limit_posts > 0 ? " ORDER BY {$wpdb->posts}.{$sortby} {$sort_order}" . ($sortby === 'ID' ? '' : ", {$wpdb->posts}.ID {$sort_order}") : '';
 	$postexclusions = wpdt_build_exclude_statement($exclude, $wpdb->posts.'.ID');
 	$from = " FROM {$wpdb->posts} ";
 	$catexclusions = '';
@@ -98,11 +102,11 @@ function wpdt_get_archive_nodelist($args){ //get archive nodelist
 			 {$postexclusions}	
 			 {$catexclusions}
 			 {$catinclusions}			 
-			 $limit)", $posttype, $startmonth, $endmonth);
+			 {$month_order}{$limit})", $posttype, $startmonth, $endmonth);
 	}
 	unset($arcresults);	
 	if($listposts && count($query)){
-		$query = (count($query) > 1) ? implode(' UNION ALL ', $query)." ORDER BY {$sortby} {$sort_order}" : $query[0]." ORDER BY {$sortby} {$sort_order}";		
+		$query = implode(' UNION ALL ', $query) . " ORDER BY {$result_order}";
 		//_log($query);
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- UNION of prepared month queries; trailing sort column/direction were allowlisted above.
 		if($postresults = $wpdb->get_results($query)){

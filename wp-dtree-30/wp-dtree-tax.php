@@ -41,15 +41,10 @@ function wpdt_get_taxonomy_nodelist($args){
 	}
 	
 	//categories can be arranged arbitrarily, and with some creative exlusion/inclusion, you'll easily create a tree without a single page connecting to root or a even parent.		
+	$node_ids = array_fill_keys(array_column($nodelist, 'id'), true);
 	foreach($nodelist as $key => $node){ //thus this step to fixup any orphans.
 		if($node['pid'] == 0){continue;} //connected to root.
-		$hasparent = false;			
-		foreach($nodelist as $potential_parent){
-			if($potential_parent['id'] == $node['pid']){					
-				$hasparent = true; break;
-			}
-		}
-		if(!$hasparent){$nodelist[$key]['pid'] = 0;	} //connect orphans to root.
+		if(!isset($node_ids[$node['pid']])){$nodelist[$key]['pid'] = 0;} //connect orphans to root.
 	}		
 	if(!$listposts || !count($nodelist)){ //it's either empty or we don't need to list posts. Either way - skip the rest.		
 		return $nodelist;

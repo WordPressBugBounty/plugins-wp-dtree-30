@@ -20,19 +20,18 @@ function wpdt_get_pages_nodelist($args){
 
 	$parents = array();
 	if($parent_as_root && $pageresults){
-		foreach($pageresults as $pageresult){			
-			$parents = get_pages(array(			
-				'sort_order' => $sort_order,
-				'sort_column' => $sort_column, 
-				'hierarchical' => $hierarchical,
-				'exclude_tree' => $exclude_tree,
-				'exclude' => $exclude, 
-				'include' =>  $child_of, //grab the parent pages only.
-				'meta_key' => $meta_key, 
-				'meta_value' => $meta_value,
-				'authors' => $authors 
-			));		
-		}
+		// The parent query depends on tree settings, not on each returned child.
+		$parents = get_pages(array(
+			'sort_order' => $sort_order,
+			'sort_column' => $sort_column,
+			'hierarchical' => $hierarchical,
+			'exclude_tree' => $exclude_tree,
+			'exclude' => $exclude,
+			'include' => $child_of, //grab the parent pages only.
+			'meta_key' => $meta_key,
+			'meta_value' => $meta_value,
+			'authors' => $authors
+		));
 	}	
 	$pageresults = array_merge((array) $parents, (array) $pageresults);
 	$nodelist = array();	
@@ -43,15 +42,10 @@ function wpdt_get_pages_nodelist($args){
 		}
 		//pages can be arranged arbitrarily, and with some creative exlusion/inclusion, you'll easily create a tree without a single page connecting to root or a even parent.
 		//thus this step to fixup any orphans.
+		$node_ids = array_fill_keys(array_column($nodelist, 'id'), true);
 		foreach($nodelist as $key => $node){
 			if($node['pid'] == 0){continue;} //connected to root.
-			$hasparent = false;			
-			foreach($nodelist as $potential_parent){
-				if($potential_parent['id'] == $node['pid']){					
-					$hasparent = true; break;
-				}
-			}
-			if(!$hasparent){$nodelist[$key]['pid'] = 0;} //connect orphans to root.
+			if(!isset($node_ids[$node['pid']])){$nodelist[$key]['pid'] = 0;} //connect orphans to root.
 		}					
 		
 	}	

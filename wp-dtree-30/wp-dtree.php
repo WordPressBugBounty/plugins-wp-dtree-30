@@ -3,7 +3,7 @@
 	Plugin Name: WP-dTree
 	Plugin URI: https://wordpress.org/plugins/wp-dtree-30/
 	Description: Collapsible navigation widgets for archives, categories, pages, links, taxonomies and menus.
-	Version: 4.5.0
+	Version: 4.5.1
 	Requires at least: 6.0
 	Requires PHP: 7.4
 	Author: Ulf Benjaminsson
