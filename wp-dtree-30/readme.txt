@@ -1,10 +1,10 @@
-﻿=== WP-dTree ===
+=== WP-dTree ===
 Contributors: ulfben
 Donate link: http://www.amazon.com/gp/registry/wishlist/2QB6SQ5XX2U0N/105-3209188-5640446?reveal=unpurchased&filter=all&sort=priority&layout=standard&x=11&y=10
 Tags: archive, navigation, category, tree, sidebar
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 4.5.1
+Stable tag: 4.5.2
 Requires PHP: 7.4
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -21,6 +21,9 @@ Requires WordPress 6.0 or later and PHP 7.4 or later.
 
 = How are trees cached? =
 Each tree is cached in the database. Changes to posts and other relevant content invalidate the cache; the next request rebuilds the tree. After upgrading, clear any separate page cache or CDN cache so visitors receive the updated output and assets.
+
+= How do archive category filters work? =
+Include categories shows posts assigned to any listed category ID. Exclude categories hides posts assigned to any listed category, even if they also belong to another category. If both fields are filled in, Include categories takes precedence. Only the listed categories are matched; list child category IDs separately. Matching posts appear and count once, regardless of how many categories they belong to. Counts include all matching posts before the monthly display limit is applied.
 
 = How do I style the selected item? =
 Enable "Highlight selection" in the widget. The selected link receives the CSS class `.nodeSel`; the supplied stylesheet underlines it. You can customize `.dtree a.nodeSel` in your theme's CSS. If you disable the plugin stylesheet in Settings -> WP-dTree, supply your own styles.
@@ -78,6 +81,9 @@ They all return associative arrays with all arguments defaulted.
 
 == Upgrade Notice ==
 
+= 4.5.2 =
+Fixes archive category filtering, duplicate entries and counts, and refreshes cached trees after category and custom taxonomy changes. Clear any separate page cache after upgrading.
+
 = 4.5.1 =
 Fixes which posts appear when limiting posts per month and reduces server work when building trees. Clear any separate page cache after upgrading.
 
@@ -85,6 +91,11 @@ Fixes which posts appear when limiting posts per month and reduces server work w
 Security update for stored/reflected XSS and settings CSRF. Requires WordPress 6.0 and PHP 7.4. Tree caches rebuild automatically; clear any separate page cache after upgrading.
 
 == Changelog ==
+
+= 4.5.2 =
+* Fix duplicate archive entries and inflated counts when filtering by several categories.
+* Excluding an archive category now also hides posts that belong to other categories.
+* Keep cached trees up to date when categories or custom taxonomy terms are edited, assigned or removed.
 
 = 4.5.1 =
 * Archive posts are now sorted before the monthly limit is applied.

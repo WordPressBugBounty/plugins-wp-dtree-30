@@ -20,28 +20,26 @@ function wpdt_get_archive_nodelist($args){ //get archive nodelist
 	$month_order = $limit_posts > 0 ? " ORDER BY {$wpdb->posts}.{$sortby} {$sort_order}" . ($sortby === 'ID' ? '' : ", {$wpdb->posts}.ID {$sort_order}") : '';
 	$postexclusions = wpdt_build_exclude_statement($exclude, $wpdb->posts.'.ID');
 	$from = " FROM {$wpdb->posts} ";
-	$catexclusions = '';
-	$catinclusions = '';
-	if($include_cats){
-		$catinclusions = " AND {$wpdb->term_relationships}.object_id = {$wpdb->posts}.ID
-		 AND {$wpdb->term_taxonomy}.taxonomy = 'category' 
-		 AND {$wpdb->term_relationships}.term_taxonomy_id = {$wpdb->term_taxonomy}.term_taxonomy_id 
-		 AND {$wpdb->term_taxonomy}.term_id IN ({$include_cats}) ";
-		 $from .= ", {$wpdb->term_relationships}, {$wpdb->term_taxonomy} ";
-	} else if($exclude_cats){
-		$catexclusions = " AND {$wpdb->term_relationships}.object_id = {$wpdb->posts}.ID
-		 AND {$wpdb->term_taxonomy}.taxonomy = 'category' 
-		 AND {$wpdb->term_relationships}.term_taxonomy_id = {$wpdb->term_taxonomy}.term_taxonomy_id 
-		 AND {$wpdb->term_taxonomy}.term_id NOT IN ({$exclude_cats}) ";
-		 $from .= ", {$wpdb->term_relationships}, {$wpdb->term_taxonomy} ";
-	}	
+	$category_filter = '';
+	if($include_cats || $exclude_cats){
+		// Preserve exact category IDs and inclusion precedence. Test membership
+		// without multiplying posts; any excluded membership rejects the post.
+		$category_ids = $include_cats ? $include_cats : $exclude_cats;
+		$category_match = $include_cats ? 'EXISTS' : 'NOT EXISTS';
+		$category_filter = " AND {$category_match} (
+			SELECT 1 FROM {$wpdb->term_relationships} AS wpdt_rel
+			INNER JOIN {$wpdb->term_taxonomy} AS wpdt_tax ON wpdt_tax.term_taxonomy_id = wpdt_rel.term_taxonomy_id
+			WHERE wpdt_rel.object_id = {$wpdb->posts}.ID
+			AND wpdt_tax.taxonomy = 'category'
+			AND wpdt_tax.term_id IN ({$category_ids})
+		) ";
+	}
 	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- SQL fragments contain only trusted wpdb tables, fixed clauses and integer category/exclusion lists.
 	$query = $wpdb->prepare("SELECT YEAR({$wpdb->posts}.post_date) AS 'year', MONTH({$wpdb->posts}.post_date) AS 'month' {$count}
 		 $from  
 		 WHERE {$wpdb->posts}.post_type = %s AND {$wpdb->posts}.post_status = 'publish'
 		 {$postexclusions}		 
-		 {$catexclusions}
-		 {$catinclusions}		 
+		 {$category_filter}
 		 GROUP BY year, month 
 		 ORDER BY {$wpdb->posts}.post_date DESC", $posttype);
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared query assembled immediately above from validated fragments.
@@ -100,8 +98,7 @@ function wpdt_get_archive_nodelist($args){ //get archive nodelist
 				AND {$wpdb->posts}.post_date >= %s
 				AND {$wpdb->posts}.post_date < %s
 			 {$postexclusions}	
-			 {$catexclusions}
-			 {$catinclusions}			 
+			 {$category_filter}
 			 {$month_order}{$limit})", $posttype, $startmonth, $endmonth);
 	}
 	unset($arcresults);	

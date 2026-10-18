@@ -39,8 +39,9 @@ class WPDT_Archives_Widget extends WPDT_Widget {
 			<input id="<?php echo esc_attr($this->get_field_id('include_cats')); ?>" name="<?php echo esc_attr($this->get_field_name('include_cats')); ?>" value="<?php echo esc_attr($settings['include_cats']); ?>"/>
 		</p>
 		<p>
-			<label for="<?php echo esc_attr($this->get_field_id('exclude_cats')); ?>" title="A comma-separated list of category IDs to be excluded from the tree (example: 3,7,31)."><?php esc_html_e('Exclude categories:', 'wp-dtree-30'); ?></label>
+			<label for="<?php echo esc_attr($this->get_field_id('exclude_cats')); ?>" title="Exclude posts assigned to any of these category IDs (example: 3,7,31)."><?php esc_html_e('Exclude categories:', 'wp-dtree-30'); ?></label>
 			<input id="<?php echo esc_attr($this->get_field_id('exclude_cats')); ?>" name="<?php echo esc_attr($this->get_field_name('exclude_cats')); ?>" value="<?php echo esc_attr($settings['exclude_cats']); ?>"/>
+			<span class="description"><?php esc_html_e('Use exact category IDs; list child categories separately. If Include categories is filled in, Exclude categories is ignored.', 'wp-dtree-30'); ?></span>
 		</p>		
 		<p>
 			<label for="<?php echo esc_attr($this->get_field_id('sortby')); ?>"><?php esc_html_e('Sort by:', 'wp-dtree-30'); ?></label> 	

@@ -3,7 +3,7 @@
 	Plugin Name: WP-dTree
 	Plugin URI: https://wordpress.org/plugins/wp-dtree-30/
 	Description: Collapsible navigation widgets for archives, categories, pages, links, taxonomies and menus.
-	Version: 4.5.1
+	Version: 4.5.2
 	Requires at least: 6.0
 	Requires PHP: 7.4
 	Author: Ulf Benjaminsson
@@ -40,12 +40,12 @@
 		add_filter('plugin_row_meta', 	'wpdt_set_plugin_meta', 2, 10);			
 		add_action('admin_menu', 		'wpdt_add_option_page');	
 		add_action('deleted_post', 		'wpdt_update_cache'); 
-		add_action('publish_post', 		'wpdt_update_cache'); 
 		add_action('save_post', 		'wpdt_update_cache');
-		add_action('created_category', 	'wpdt_update_cache'); 
-		add_action('edited_category', 	'wpdt_update_cache'); 
-		add_action('delete_category', 	'wpdt_update_cache');
-		add_action('publish_page', 		'wpdt_update_cache');	
+		// Includes custom taxonomies and recounts completed after relationship changes.
+		add_action('clean_term_cache', 'wpdt_update_cache');
+		// Relationship events also cover imports that defer term counting.
+		add_action('set_object_terms', 'wpdt_update_cache');
+		add_action('deleted_term_relationships', 'wpdt_update_cache');
 		add_action('wp_update_nav_menu', 'wpdt_update_cache');
 		add_action('update_option_permalink_structure', 'wpdt_update_cache');
 		add_action('add_link', 			'wpdt_update_cache');
