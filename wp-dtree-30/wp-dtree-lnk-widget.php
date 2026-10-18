@@ -8,6 +8,8 @@ class WPDT_Links_Widget extends WPDT_Widget{
 	}
 	
 	function widget($args, $settings){
+		$settings = wp_parse_args((array) $settings, wpdt_get_defaults('lnk'));
+		$settings['treetype'] = 'lnk';
 		parent::widget($args, $settings);
 	}
 

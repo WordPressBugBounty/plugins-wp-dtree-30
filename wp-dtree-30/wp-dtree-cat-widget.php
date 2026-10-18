@@ -8,6 +8,8 @@ class WPDT_Categories_Widget extends WPDT_Widget{
 	}
 	
 	function widget($args, $settings){		
+		$settings = wp_parse_args((array) $settings, wpdt_get_defaults('cat'));
+		$settings['treetype'] = 'cat';
 		parent::widget($args, $settings);
 	}
 	function update($new_settings, $old_settings){		
@@ -106,7 +108,7 @@ class WPDT_Categories_Widget extends WPDT_Widget{
 			<input id="<?php echo esc_attr($this->get_field_id('postexclude')); ?>" name="<?php echo esc_attr($this->get_field_name('postexclude')); ?>" value="<?php echo esc_attr($settings['postexclude']); ?>" style="width:100px;" />
 		</p><p>
 			<input class="checkbox" type="checkbox" <?php checked($settings['allowdupes'], true); ?> id="<?php echo esc_attr($this->get_field_id('allowdupes')); ?>" name="<?php echo esc_attr($this->get_field_name('allowdupes')); ?>" /> 
-			<label for="<?php echo esc_attr($this->get_field_id('allowdupes')); ?>" title="<?php esc_attr_e('Allow posts sorted under multiple categories? Otherwise the post will appear only in the first of its categories.','wp-dtree-30'); ?>"><?php esc_html_e('Allow duplicate entries', 'wp-dtree-30'); ?></label>
+			<label for="<?php echo esc_attr($this->get_field_id('allowdupes')); ?>" title="<?php esc_attr_e('Allow posts under multiple terms? Otherwise each post belongs to its first matching visible term in the chosen term sort order, before post limits are applied.','wp-dtree-30'); ?>"><?php esc_html_e('Allow duplicate entries', 'wp-dtree-30'); ?></label>
 		</p><p>
 			<input class="checkbox" type="checkbox" <?php checked($settings['hide_empty'], true); ?> id="<?php echo esc_attr($this->get_field_id('hide_empty')); ?>" name="<?php echo esc_attr($this->get_field_name('hide_empty')); ?>" /> 
 			<label for="<?php echo esc_attr($this->get_field_id('hide_empty')); ?>"><?php esc_html_e('Hide empty categories', 'wp-dtree-30'); ?></label>

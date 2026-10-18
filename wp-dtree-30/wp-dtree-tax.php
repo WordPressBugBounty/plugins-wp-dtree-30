@@ -36,7 +36,7 @@ function wpdt_get_taxonomy_nodelist($args){
 			'name' => ($showcount) ? $name ."&nbsp;({$term->count})" : $name,			
 			'title' => wp_strip_all_tags($term->name .': '. $term->description)			
 		);		
-		$termids[$term->term_id] = array('posts_returned' => 0, 'count' => $term->count); //save the ID, post-counter and actual post count in case we're asked to limit the tree and needs to know how much we've kept back
+		$termids[$term->term_id] = array('posts_returned' => 0, 'count' => $term->count, 'name' => $term->name); //save the ID, post-counter and actual post count in case we're asked to limit the tree and needs to know how much we've kept back
 		$idcount++;		
 	}
 	
@@ -50,36 +50,7 @@ function wpdt_get_taxonomy_nodelist($args){
 		return $nodelist;
 	}	
 	unset($taxonomyresults);
-	$postexclusions = wpdt_build_exclude_statement($postexclude, $wpdb->posts.'.ID');		
-	$catexclusions = wpdt_build_exclude_statement($exclude, $wpdb->terms.'.term_id');	
-	$groupby = (!$allowdupes) ? " GROUP BY {$wpdb->posts}.ID ": '';	
-	$unions = array();	
-	// Only trusted table names, allowlisted sort syntax and integer exclusion lists are interpolated.
-	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- See validation above and wpdt_build_exclude_statement().
-	$query = $wpdb->prepare("(SELECT {$wpdb->posts}.ID AS 'ID', {$wpdb->posts}.post_title AS 'post_title', {$wpdb->terms}.term_id AS 'term_id'
-				 FROM {$wpdb->posts}, {$wpdb->terms}, {$wpdb->term_relationships}, {$wpdb->term_taxonomy} 
-				 WHERE {$wpdb->term_relationships}.object_id = {$wpdb->posts}.ID 			 
-				 AND {$wpdb->term_taxonomy}.taxonomy = %s
-				 AND {$wpdb->term_relationships}.term_taxonomy_id = {$wpdb->term_taxonomy}.term_taxonomy_id 
-				 AND {$wpdb->term_taxonomy}.term_id = {$wpdb->terms}.term_id 	 
-				 /*tax-id*/
-				 AND {$wpdb->posts}.post_status = 'publish' 
-				 AND {$wpdb->posts}.post_type = 'post' 
-				{$catexclusions} 				
-				{$postexclusions} 
-				{$groupby} 
-				ORDER BY {$wpdb->posts}.{$cpsortby} {$cpsortorder}
-				/*limit*/)", $taxonomy);
-	if($limit_posts > 0){ //selecting subsets of subsets: http://www.mysqlperformanceblog.com/2006/08/10/using-union-to-implement-loose-index-scan-to-mysql/		
-		foreach($termids as $termid => $count){
-			$termid = (int) $termid;
-			$unions[] = str_replace('/*tax-id*/', " AND {$wpdb->term_taxonomy}.term_id = {$termid} ", str_replace('/*limit*/', " LIMIT {$limit_posts}", $query));			
-		}			
-		$query = implode(' UNION ALL ', $unions);
-		unset($unions);
-	}	
-	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared taxonomy; unions add only integer term IDs/limits, allowlisted sorting and integer exclusions.
-	$postresults = (array)$wpdb->get_results($query);
+	$postresults = wpdt_get_term_posts(array_keys($termids), $taxonomy, $args);
 	foreach($postresults as $postresult){
 		$text = wp_strip_all_tags(apply_filters('the_title', $postresult->post_title));		
 		$url = esc_url(get_permalink($postresult->ID));
@@ -104,7 +75,7 @@ function wpdt_get_taxonomy_nodelist($args){
 					'name' => str_replace('%excluded%', $excluded, $show_more), //add category count? 
 					'url' => get_term_link($termid, $taxonomy), 
 					/* translators: %s: term name. */
-					'title' => sprintf(__('Browse all posts in %s', 'wp-dtree-30'), get_cat_name($termid))
+					'title' => sprintf(__('Browse all posts in %s', 'wp-dtree-30'), $count['name'])
 				);				
 			}
 		}	

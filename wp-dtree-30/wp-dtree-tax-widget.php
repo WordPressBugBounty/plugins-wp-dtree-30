@@ -8,6 +8,8 @@ class WPDT_Taxonomies_Widget extends WPDT_Widget{
 	}
 	
 	function widget($args, $settings){		
+		$settings = wp_parse_args((array) $settings, wpdt_get_defaults('tax'));
+		$settings['treetype'] = 'tax';
 		parent::widget($args, $settings);
 	}
 	function update($new_settings, $old_settings){		
@@ -122,7 +124,7 @@ class WPDT_Taxonomies_Widget extends WPDT_Widget{
 			<label for="<?php echo esc_attr($this->get_field_id('usedescription')); ?>" title="<?php esc_attr_e('Use the taxonomy description instead of name when rendering the tree.','wp-dtree-30'); ?>"><?php esc_html_e('Use description', 'wp-dtree-30'); ?></label>
 		</p><p>
 			<input class="checkbox" type="checkbox" <?php checked($settings['allowdupes'], true); ?> id="<?php echo esc_attr($this->get_field_id('allowdupes')); ?>" name="<?php echo esc_attr($this->get_field_name('allowdupes')); ?>" /> 
-			<label for="<?php echo esc_attr($this->get_field_id('allowdupes')); ?>" title="<?php esc_attr_e('Allow posts sorted under multiple Taxonomies? Otherwise the post will appear only in the first of its Taxonomies.','wp-dtree-30'); ?>"><?php esc_html_e('Allow duplicate entries', 'wp-dtree-30'); ?></label>
+			<label for="<?php echo esc_attr($this->get_field_id('allowdupes')); ?>" title="<?php esc_attr_e('Allow posts under multiple terms? Otherwise each post belongs to its first matching visible term in the chosen term sort order, before post limits are applied.','wp-dtree-30'); ?>"><?php esc_html_e('Allow duplicate entries', 'wp-dtree-30'); ?></label>
 		</p><p>
 			<input class="checkbox" type="checkbox" <?php checked($settings['hide_empty'], true); ?> id="<?php echo esc_attr($this->get_field_id('hide_empty')); ?>" name="<?php echo esc_attr($this->get_field_name('hide_empty')); ?>" /> 
 			<label for="<?php echo esc_attr($this->get_field_id('hide_empty')); ?>"><?php esc_html_e('Hide empty taxonomies', 'wp-dtree-30'); ?></label>

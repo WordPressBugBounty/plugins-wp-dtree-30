@@ -8,6 +8,8 @@ class WPDT_Pages_Widget extends WPDT_Widget{
 	}
 	
 	function widget($args, $settings){
+		$settings = wp_parse_args((array) $settings, wpdt_get_defaults('pge'));
+		$settings['treetype'] = 'pge';
 		parent::widget($args, $settings);
 	}
 

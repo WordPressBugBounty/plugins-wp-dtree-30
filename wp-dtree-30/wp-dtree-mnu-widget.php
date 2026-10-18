@@ -8,6 +8,8 @@ class WPDT_Menu_Widget extends WPDT_Widget{
 	}
 	
 	function widget($args, $settings){
+		$settings = wp_parse_args((array) $settings, wpdt_get_defaults('mnu'));
+		$settings['treetype'] = 'mnu';
 		parent::widget($args, $settings);
 	}
 

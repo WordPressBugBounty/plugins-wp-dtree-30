@@ -36,44 +36,17 @@ function wpdt_get_category_nodelist($args){
 		return $nodelist;
 	}	
 	unset($catresults);
-	$postexclusions = wpdt_build_exclude_statement($postexclude, $wpdb->posts.'.ID');		
-	$catexclusions = wpdt_build_exclude_statement($exclude, $wpdb->terms.'.term_id');	
-	$groupby = (!$allowdupes) ? " GROUP BY {$wpdb->posts}.ID ": '';	
-	$unions = array();	
-	$query = "(SELECT {$wpdb->posts}.ID AS 'ID', {$wpdb->posts}.post_title AS 'post_title', {$wpdb->terms}.term_id AS 'catid' 
-				 FROM {$wpdb->posts}, {$wpdb->terms}, {$wpdb->term_relationships}, {$wpdb->term_taxonomy} 
-				 WHERE {$wpdb->term_relationships}.object_id = {$wpdb->posts}.ID
-				 AND {$wpdb->term_taxonomy}.taxonomy = 'category' 
-				 AND {$wpdb->term_relationships}.term_taxonomy_id = {$wpdb->term_taxonomy}.term_taxonomy_id 
-				 AND {$wpdb->term_taxonomy}.term_id = {$wpdb->terms}.term_id 	 
-				 /*category-id*/
-				 AND {$wpdb->posts}.post_status = 'publish' 
-				 AND {$wpdb->posts}.post_type = 'post' 
-				{$catexclusions} 				
-				{$postexclusions} 
-				{$groupby} 
-				ORDER BY {$wpdb->posts}.{$cpsortby} {$cpsortorder}
-				/*limit*/)";		
-	if($limit_posts > 0){ //selecting subsets of subsets: http://www.mysqlperformanceblog.com/2006/08/10/using-union-to-implement-loose-index-scan-to-mysql/		
-		foreach($catids as $catid => $count){
-			$catid = (int) $catid;
-			$unions[] = str_replace('/*category-id*/', " AND {$wpdb->term_taxonomy}.term_id = {$catid} ", str_replace('/*limit*/', " LIMIT {$limit_posts}", $query));			
-		}			
-		$query = implode(' UNION ALL ', $unions);
-		unset($unions);
-	}	
-	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- SQL has only trusted wpdb tables, allowlisted sorting, integer IDs/limits and integer-only exclusion lists.
-	$postresults = (array)$wpdb->get_results($query);
+	$postresults = wpdt_get_term_posts(array_keys($catids), 'category', $args);
 	foreach($postresults as $postresult){
-		if(!isset($catids[$postresult->catid])){
+		if(!isset($catids[$postresult->term_id])){
 			continue;
 		}
 		$text = wp_strip_all_tags(apply_filters('the_title', $postresult->post_title));		
 		$url = esc_url(get_permalink($postresult->ID));
-		$catids[$postresult->catid]['posts_returned'] += 1; //add 
+		$catids[$postresult->term_id]['posts_returned'] += 1; //add
 		$nodelist[$idcount] = array(
 			'id' => $postresult->ID, 
-			'pid' => -$postresult->catid, 
+			'pid' => -$postresult->term_id,
 			'name' => $text, 
 			'url' => $url, 
 			'title' => ''
@@ -112,7 +85,7 @@ function wpdt_get_category_nodelist($args){
 	}
 	// Find category nodes
 	foreach($nodelist as $node) {
-		if($node['pid'] > 0){
+		if(!is_numeric($node['id']) || $node['id'] >= 0){
 			continue;
 		}
 		// Get ordered posts for each category node

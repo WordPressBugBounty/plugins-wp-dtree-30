@@ -3,8 +3,8 @@
 	Plugin Name: WP-dTree
 	Plugin URI: https://wordpress.org/plugins/wp-dtree-30/
 	Description: Collapsible navigation widgets for archives, categories, pages, links, taxonomies and menus.
-	Version: 4.5.2
-	Requires at least: 6.0
+	Version: 4.5.4
+	Requires at least: 6.0.1
 	Requires PHP: 7.4
 	Author: Ulf Benjaminsson
 	Author URI: http://www.ulfbenjaminsson.com
@@ -47,6 +47,8 @@
 		add_action('set_object_terms', 'wpdt_update_cache');
 		add_action('deleted_term_relationships', 'wpdt_update_cache');
 		add_action('wp_update_nav_menu', 'wpdt_update_cache');
+		// Item metadata is saved after the initial post/term hooks for new items.
+		add_action('wp_update_nav_menu_item', 'wpdt_update_cache');
 		add_action('update_option_permalink_structure', 'wpdt_update_cache');
 		add_action('add_link', 			'wpdt_update_cache');
 		add_action('delete_link', 		'wpdt_update_cache');
@@ -271,6 +273,8 @@
 	function wpdt_get_tree($args){ 				
 		require_once('wp-dtree-build.php');	
 		global $wpdt_tree_ids;
+		$args = wp_parse_args($args);
+		if (!isset($args['treetype']) || !is_string($args['treetype']) || !in_array($args['treetype'], array('arc', 'cat', 'pge', 'lnk', 'tax', 'mnu'), true)) { return false; }
 		$args = wp_parse_args($args, wpdt_get_defaults($args['treetype']));
 		if(isset($args['child_of_current']) && $args['child_of_current'] == 1){
 			wpdt_set_child_of_current($args);

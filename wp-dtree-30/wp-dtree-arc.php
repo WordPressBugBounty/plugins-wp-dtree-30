@@ -34,16 +34,19 @@ function wpdt_get_archive_nodelist($args){ //get archive nodelist
 			AND wpdt_tax.term_id IN ({$category_ids})
 		) ";
 	}
+	// Keep month counts and post selection on the same eligibility rules.
+	// Leave the post-type placeholder unprepared until the complete query is built.
+	$where = " WHERE {$wpdb->posts}.post_type = %s AND {$wpdb->posts}.post_status = 'publish'
+		{$postexclusions}
+		{$category_filter}";
 	// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- SQL fragments contain only trusted wpdb tables, fixed clauses and integer category/exclusion lists.
-	$query = $wpdb->prepare("SELECT YEAR({$wpdb->posts}.post_date) AS 'year', MONTH({$wpdb->posts}.post_date) AS 'month' {$count}
-		 $from  
-		 WHERE {$wpdb->posts}.post_type = %s AND {$wpdb->posts}.post_status = 'publish'
-		 {$postexclusions}		 
-		 {$category_filter}
+	$months_query = $wpdb->prepare("SELECT YEAR({$wpdb->posts}.post_date) AS 'year', MONTH({$wpdb->posts}.post_date) AS 'month' {$count}
+		 {$from}
+		 {$where}
 		 GROUP BY year, month 
 		 ORDER BY {$wpdb->posts}.post_date DESC", $posttype);
 	// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Prepared query assembled immediately above from validated fragments.
-	$arcresults = $wpdb->get_results($query);		
+	$arcresults = $wpdb->get_results($months_query);		
 
 	if(!$arcresults){
 		return array(); //just create empty tree and bail
@@ -51,7 +54,7 @@ function wpdt_get_archive_nodelist($args){ //get archive nodelist
 	
 	$nodelist = array();
 	$curyear = -1;
-	$query = array();		
+	$month_queries = array();		
 	$select_sortby = ($sortby == 'ID' || $sortby == 'post_date' || $sortby == 'post_title') ? '' : ", {$wpdb->posts}.{$sortby} AS '{$sortby}'"; 
 	
 	foreach($arcresults as $arcresult){		
@@ -92,21 +95,18 @@ function wpdt_get_archive_nodelist($args){ //get archive nodelist
 		$startmonth = $arcresult->year."-".zeroise($arcresult->month, 2)."-01 00:00:00";
 		$endmonth = wpdt_add_month($startmonth, 1);		
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Interpolated fragments use trusted tables, allowlisted columns and integer IDs/limits/exclusions.
-		$query[] = $wpdb->prepare("(SELECT {$wpdb->posts}.ID AS 'ID', {$wpdb->posts}.post_date AS 'post_date', {$wpdb->posts}.post_title AS 'post_title', {$pidcount} AS 'pID' {$select_sortby}
+		$month_queries[] = $wpdb->prepare("(SELECT {$wpdb->posts}.ID AS 'ID', {$wpdb->posts}.post_date AS 'post_date', {$wpdb->posts}.post_title AS 'post_title', {$pidcount} AS 'pID' {$select_sortby}
 			 {$from}
-			 WHERE {$wpdb->posts}.post_type = %s AND {$wpdb->posts}.post_status = 'publish'
+			 {$where}
 				AND {$wpdb->posts}.post_date >= %s
 				AND {$wpdb->posts}.post_date < %s
-			 {$postexclusions}	
-			 {$category_filter}
 			 {$month_order}{$limit})", $posttype, $startmonth, $endmonth);
 	}
 	unset($arcresults);	
-	if($listposts && count($query)){
-		$query = implode(' UNION ALL ', $query) . " ORDER BY {$result_order}";
-		//_log($query);
+	if($listposts && count($month_queries)){
+		$posts_query = implode(' UNION ALL ', $month_queries) . " ORDER BY {$result_order}";
 		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- UNION of prepared month queries; trailing sort column/direction were allowlisted above.
-		if($postresults = $wpdb->get_results($query)){
+		if($postresults = $wpdb->get_results($posts_query)){
 			foreach($postresults as $postresult){			
 				$text = wp_strip_all_tags(apply_filters('the_title', $postresult->post_title));			
 				$url = get_permalink($postresult->ID);

@@ -9,6 +9,8 @@ class WPDT_Archives_Widget extends WPDT_Widget {
 	}
 	
 	function widget($args, $settings){ 
+		$settings = wp_parse_args((array) $settings, wpdt_get_defaults('arc'));
+		$settings['treetype'] = 'arc';
 		parent::widget($args, $settings);
 	}
 	

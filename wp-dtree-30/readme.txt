@@ -2,9 +2,9 @@
 Contributors: ulfben
 Donate link: http://www.amazon.com/gp/registry/wishlist/2QB6SQ5XX2U0N/105-3209188-5640446?reveal=unpurchased&filter=all&sort=priority&layout=standard&x=11&y=10
 Tags: archive, navigation, category, tree, sidebar
-Requires at least: 6.0
+Requires at least: 6.0.1
 Tested up to: 7.1
-Stable tag: 4.5.2
+Stable tag: 4.5.4
 Requires PHP: 7.4
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -15,7 +15,7 @@ Collapsible navigation trees for archives, categories, pages, links, custom taxo
 
 This plugin provides collapsible navigation trees for archives, categories, pages, links, custom taxonomies and menus. Use the widgets in a widget area or the template functions documented below. Archive trees can group posts by year and month.
 
-Requires WordPress 6.0 or later and PHP 7.4 or later.
+Requires WordPress 6.0.1 or later and PHP 7.4 or later.
 
 == Frequently Asked Questions ==
 
@@ -24,6 +24,9 @@ Each tree is cached in the database. Changes to posts and other relevant content
 
 = How do archive category filters work? =
 Include categories shows posts assigned to any listed category ID. Exclude categories hides posts assigned to any listed category, even if they also belong to another category. If both fields are filled in, Include categories takes precedence. Only the listed categories are matched; list child category IDs separately. Matching posts appear and count once, regardless of how many categories they belong to. Counts include all matching posts before the monthly display limit is applied.
+
+= Where do posts with several categories or terms appear? =
+With Allow duplicate entries enabled, posts can appear under every matching visible term. With it disabled, each post belongs to its first matching visible term in the configured term sort order. The per-branch post limit is then applied; a post hidden by that limit is not moved to another branch. Equal post sort values use post ID as a stable tie-breaker. Counts and Show more links still refer to the full term archive, which can include posts shown elsewhere in the tree or hidden by widget settings.
 
 = How do I style the selected item? =
 Enable "Highlight selection" in the widget. The selected link receives the CSS class `.nodeSel`; the supplied stylesheet underlines it. You can customize `.dtree a.nodeSel` in your theme's CSS. If you disable the plugin stylesheet in Settings -> WP-dTree, supply your own styles.
@@ -81,6 +84,12 @@ They all return associative arrays with all arguments defaulted.
 
 == Upgrade Notice ==
 
+= 4.5.4 =
+Improves menu updates and remembered tree state, and avoids selecting unrelated items. Requires WordPress 6.0.1 or later. Clear any separate page cache after upgrading.
+
+= 4.5.3 =
+Fixes missing or duplicate posts in category and custom taxonomy trees, and PHP warnings from incomplete widget settings. Clear any separate page cache after upgrading.
+
 = 4.5.2 =
 Fixes archive category filtering, duplicate entries and counts, and refreshes cached trees after category and custom taxonomy changes. Clear any separate page cache after upgrading.
 
@@ -91,6 +100,21 @@ Fixes which posts appear when limiting posts per month and reduces server work w
 Security update for stored/reflected XSS and settings CSRF. Requires WordPress 6.0 and PHP 7.4. Tree caches rebuild automatically; clear any separate page cache after upgrading.
 
 == Changelog ==
+
+= 4.5.4 =
+* Reduce server work when building large menu trees.
+* Require WordPress 6.0.1 or later to avoid the term-cache bug in WordPress 6.0.
+* Avoid opening or highlighting an unrelated item when the requested item is absent from the tree.
+* Prevent similarly named cookies from affecting remembered tree state.
+* Fix newly added menu items sometimes missing from cached trees.
+* Prevent tree controls from overwriting variables used by other scripts on the page.
+
+= 4.5.3 =
+* Fix PHP warnings and missing trees when widget settings are empty or incomplete.
+* Respect disabled duplicate entries in category and custom taxonomy trees, including when limiting posts per branch.
+* Keep posts under their first matching visible term and avoid missing or hidden-parent entries.
+* Fix post listing on databases enforcing strict grouping rules.
+* Fix custom taxonomy Show more titles and an error when using Show more with Advanced Post Types Order.
 
 = 4.5.2 =
 * Fix duplicate archive entries and inflated counts when filtering by several categories.

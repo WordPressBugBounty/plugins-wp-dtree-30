@@ -68,11 +68,10 @@ function dtNode(id, pid, name, url, title, targ, rsspath){
 	this.url = url;
 	this.title = title;	
 	this.rsspath = rsspath; //for feed link.
-	var icon, iconOpen, open; //these were originally passed as parameters, but were never used in wp-dtree.	
 	this.target = targ;
-	this.icon = icon;
-	this.iconOpen = iconOpen;
-	this._io = open || false;
+	this.icon = undefined;
+	this.iconOpen = undefined;
+	this._io = false;
 	this._is = false;
 	this._ls = false;
 	this._hc = false;
@@ -138,7 +137,7 @@ wpdTree.prototype.a = function(id, pid, name, title, path, link_target, rsspath)
 };
  
 wpdTree.prototype.truncate = function(str, length){
-    var length = length || 16;
+    length = length || 16;
     var truncation = '...';
     if(str.length > length)  {
     	return str.slice(0, length - truncation.length) + truncation;
@@ -216,7 +215,7 @@ wpdTree.prototype.node = function(node, nodeId){
 		}
 		else if((!this.config.folderLinks || !node.url) && node._hc && node.pid != this.root.id){
 			str += '<a href="javascript: ' + this._objName + '.o(' + nodeId + ');"'
-			if(true || node.title) str += ' title="' + node.title + '"';
+			str += ' title="' + node.title + '"';
 			str += ' class="node">';
 		}
 		str += node.name;	
@@ -275,12 +274,12 @@ wpdTree.prototype.s = function(id){
 	if(cn._hc && !this.config.folderLinks) return;
 	if(this.selecteddtNode != id){
 		if(this.selecteddtNode || this.selecteddtNode==0){
-			eOld = document.getElementById("s" + this._objName + this.selecteddtNode);
+			var eOld = document.getElementById("s" + this._objName + this.selecteddtNode);
 			if(eOld){
 				eOld.className = "node";
 			}
 		}
-		eNew = document.getElementById("s" + this._objName + id);
+		var eNew = document.getElementById("s" + this._objName + id);
 		if(eNew){
 			eNew.className = "nodeSel";
 		}
@@ -319,6 +318,8 @@ wpdTree.prototype.openTo = function(nId, bSelect, bFirst){
 				break;
 			}
 		}
+		// A public node ID is not an array index when no match was found.
+		if(n == this.adtNodes.length) return;
 	}
 	var cn=this.adtNodes[nId];	
 	if (cn===undefined) return;
@@ -355,10 +356,10 @@ wpdTree.prototype.closeAllChildren = function(node){
 
 // Change the status of a node(open or closed)
 wpdTree.prototype.nodeStatus = function(status, id, bottom){
-	eDiv	= document.getElementById('d' + this._objName + id);
-	eJoin	= document.getElementById('j' + this._objName + id);
+	var eDiv	= document.getElementById('d' + this._objName + id);
+	var eJoin	= document.getElementById('j' + this._objName + id);
 	if(this.config.useIcons){
-		eIcon	= document.getElementById('i' + this._objName + id);
+		var eIcon	= document.getElementById('i' + this._objName + id);
 		eIcon.src = (status) ? this.adtNodes[id].iconOpen : this.adtNodes[id].icon;
 	}
 	eJoin.src = (this.config.useLines)?
@@ -392,15 +393,13 @@ wpdTree.prototype.setCookie = function(cookieName, cookieValue, expires, path, d
 
 // [Cookie] Gets a value from a cookie
 wpdTree.prototype.getCookie = function(cookieName){
-	var cookieValue = '';
-	var posName = document.cookie.indexOf(escape(cookieName) + '=');
-	if(posName != -1){
-		var posValue = posName + (escape(cookieName) + '=').length;
-		var endPos = document.cookie.indexOf(';', posValue);
-		if(endPos != -1) cookieValue = unescape(document.cookie.substring(posValue, endPos));
-		else cookieValue = unescape(document.cookie.substring(posValue));
+	var prefix = escape(cookieName) + '=';
+	var cookies = document.cookie.split(';');
+	for(var n=0; n<cookies.length; n++){
+		var cookie = cookies[n].replace(/^\s+/, '');
+		if(cookie.indexOf(prefix) == 0) return unescape(cookie.substring(prefix.length));
 	}
-	return (cookieValue);
+	return '';
 };
 
 // [Cookie] Returns ids of open nodes as a string
@@ -433,7 +432,7 @@ if(!Array.prototype.push){
 };
 if(!Array.prototype.pop){
 	Array.prototype.pop = function array_pop(){
-		lastElement = this[this.length-1];
+		var lastElement = this[this.length-1];
 		this.length = Math.max(this.length-1,0);
 		return lastElement;
 	}

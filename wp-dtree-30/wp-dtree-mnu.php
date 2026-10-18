@@ -8,15 +8,10 @@ function wpdt_get_menu_nodelist($args){
 	if(!$menu_items){
 		return $nodelist;
 	}
+	$menu_ids = array_fill_keys(array_column($menu_items, 'ID'), true);
 	foreach((array)$menu_items as $key => $menu_item){
 		$pid = $menu_item->menu_item_parent;
-		$hasparent = false;			
-		foreach($menu_items as $key => $potential_parent){
-			if($potential_parent->ID == $pid){					
-				$hasparent = true; break;
-			}
-		}
-		if(!$hasparent){$pid = 0;} //connect orphans to root.
+		if(!isset($menu_ids[(int)$pid])){$pid = 0;} //connect orphans to root.
 		$nodelist[$idcount] = array(
 			'id' => $menu_item->ID, 
 			'pid' => $pid, 
