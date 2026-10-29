@@ -7,4 +7,5 @@ global $wpdb;
 wpdt_uninstall_cache();
 delete_option('wp_dtree_db_version');
 delete_option('wpdt_options');
+delete_metadata('user', 0, 'wpdt_successor_notice_dismissed', '', true);
 ?>

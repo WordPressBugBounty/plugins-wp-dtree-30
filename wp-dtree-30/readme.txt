@@ -4,14 +4,26 @@ Donate link: http://www.amazon.com/gp/registry/wishlist/2QB6SQ5XX2U0N/105-320918
 Tags: archive, navigation, category, tree, sidebar
 Requires at least: 6.0.1
 Tested up to: 7.1
-Stable tag: 4.5.4
+Stable tag: 4.5.5
 Requires PHP: 7.4
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Collapsible navigation trees for archives, categories, pages, links, custom taxonomies and menus.
+Legacy collapsible navigation trees for WordPress. For a modern alternative with native blocks, see Content Trees.
 
 == Description ==
+
+= Looking for a modern alternative? =
+
+WP-dTree has a modern successor: [Content Trees](https://wordpress.org/plugins/content-trees/).
+
+Content Trees offers native WordPress blocks with live previews, keyboard and screen-reader support, and on-demand post loading. It can run alongside WP-dTree, allowing you to replace your navigation trees gradually.
+
+Existing widgets and settings are not migrated automatically, and some legacy features are not yet supported. Content Trees requires WordPress 6.3 or later; see its listing for current features and requirements.
+
+WP-dTree remains supported for security and compatibility fixes. New feature development is focused on Content Trees.
+
+= WP-dTree features =
 
 This plugin provides collapsible navigation trees for archives, categories, pages, links, custom taxonomies and menus. Use the widgets in a widget area or the template functions documented below. Archive trees can group posts by year and month.
 
@@ -84,6 +96,9 @@ They all return associative arrays with all arguments defaulted.
 
 == Upgrade Notice ==
 
+= 4.5.5 =
+Introduces Content Trees, WP-dTree's modern successor, with guidance for gradually replacing your trees. WP-dTree continues to receive security and compatibility fixes.
+
 = 4.5.4 =
 Improves menu updates and remembered tree state, and avoids selecting unrelated items. Requires WordPress 6.0.1 or later. Clear any separate page cache after upgrading.
 
@@ -100,6 +115,10 @@ Fixes which posts appear when limiting posts per month and reduces server work w
 Security update for stored/reflected XSS and settings CSRF. Requires WordPress 6.0 and PHP 7.4. Tree caches rebuild automatically; clear any separate page cache after upgrading.
 
 == Changelog ==
+
+= 4.5.5 =
+* Introduce Content Trees, the modern successor to WP-dTree, with migration guidance and a permanently dismissible administrator notice.
+* Clarify that WP-dTree continues to receive security and compatibility fixes.
 
 = 4.5.4 =
 * Reduce server work when building large menu trees.

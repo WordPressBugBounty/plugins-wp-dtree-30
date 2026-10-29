@@ -2,8 +2,8 @@
 	/*
 	Plugin Name: WP-dTree
 	Plugin URI: https://wordpress.org/plugins/wp-dtree-30/
-	Description: Collapsible navigation widgets for archives, categories, pages, links, taxonomies and menus.
-	Version: 4.5.4
+	Description: Legacy collapsible navigation trees. For modern blocks, accessible controls and ongoing feature development, see Content Trees.
+	Version: 4.5.5
 	Requires at least: 6.0.1
 	Requires PHP: 7.4
 	Author: Ulf Benjaminsson
@@ -39,6 +39,11 @@
 		add_action('init', 'wpdt_maybe_upgrade', 0);
 		add_filter('plugin_row_meta', 	'wpdt_set_plugin_meta', 2, 10);			
 		add_action('admin_menu', 		'wpdt_add_option_page');	
+		if (is_admin()) {
+			add_action('admin_notices', 'wpdt_successor_admin_notice');
+			add_action('admin_enqueue_scripts', 'wpdt_successor_notice_script');
+			add_action('wp_ajax_wpdt_dismiss_successor_notice', 'wpdt_dismiss_successor_notice');
+		}
 		add_action('deleted_post', 		'wpdt_update_cache'); 
 		add_action('save_post', 		'wpdt_update_cache');
 		// Includes custom taxonomies and recounts completed after relationship changes.
@@ -145,7 +150,10 @@
 		
 	function wpdt_set_plugin_meta($links, $file) {		
 		if($file == WPDT_BASENAME) {
-			return array_merge($links, array(sprintf( '<a href="options-general.php?page=%s">%s</a>', WPDT_BASENAME, __('Settings', 'wp-dtree-30'))));
+			return array_merge($links, array(
+				sprintf( '<a href="options-general.php?page=%s">%s</a>', WPDT_BASENAME, __('Settings', 'wp-dtree-30')),
+				'<a href="' . esc_url('https://wordpress.org/plugins/content-trees/') . '">' . esc_html__('Content Trees', 'wp-dtree-30') . '</a>'
+			));
 		}
 		return $links;
 	}	
@@ -156,6 +164,77 @@
 	function wpdt_add_option_page(){				
 		add_options_page('WP-dTree Settings', 'WP-dTree', 'manage_options', WPDT_BASENAME, 'wpdt_option_page');						 
 	}		
+	function wpdt_show_successor_admin_notice() {
+		if (!is_admin() || !current_user_can('activate_plugins') || get_user_meta(get_current_user_id(), 'wpdt_successor_notice_dismissed', true)) {
+			return false;
+		}
+		$screen = get_current_screen();
+		if (!$screen || $screen->is_block_editor() || $screen->id === get_plugin_page_hookname(WPDT_BASENAME, 'options-general.php')) {
+			return false;
+		}
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		if (!is_plugin_active(WPDT_BASENAME)) {
+			return false;
+		}
+		foreach (get_plugins() as $file => $plugin) {
+			if ($file === 'content-trees/content-trees.php' || $plugin['TextDomain'] === 'content-trees') {
+				return false; // Also hide for an installed but inactive successor.
+			}
+		}
+		return true;
+	}
+	function wpdt_render_successor_notice($dismissible = false) {
+		if ($dismissible) {
+			echo '<div id="wpdt-successor-notice" class="notice notice-info is-dismissible" data-nonce="' . esc_attr(wp_create_nonce('wpdt_dismiss_successor_notice')) . '">';
+		} else {
+			echo '<div class="notice notice-info">';
+		}
+		echo '<p><strong>' . esc_html__('WP-dTree has a modern successor', 'wp-dtree-30') . '</strong></p>';
+		echo '<p>' . esc_html__('Content Trees offers native WordPress blocks, keyboard and screen-reader support, and on-demand post loading.', 'wp-dtree-30') . '</p>';
+		echo '<p>' . esc_html__('WP-dTree remains supported for security and compatibility fixes. New feature development is focused on Content Trees. Both plugins can run side by side while you replace your trees.', 'wp-dtree-30') . '</p>';
+		echo '<p>' . esc_html__('Existing widgets and settings are not migrated automatically, and some legacy features are not yet supported. Content Trees requires WordPress 6.3 or later.', 'wp-dtree-30') . '</p>';
+		echo '<p><a href="' . esc_url('https://wordpress.org/plugins/content-trees/') . '">' . esc_html__('Explore Content Trees', 'wp-dtree-30') . '</a></p></div>';
+	}
+	function wpdt_successor_admin_notice() {
+		if (wpdt_show_successor_admin_notice()) {
+			wpdt_render_successor_notice(true);
+		}
+	}
+	function wpdt_successor_notice_script() {
+		if (!wpdt_show_successor_admin_notice()) {
+			return;
+		}
+		// Core's common script supplies the native dismiss button and jQuery.
+		wp_add_inline_script('common', <<<'JS'
+jQuery(function ($) {
+	$(document).on('click', '#wpdt-successor-notice .notice-dismiss', function () {
+		$.post(window.ajaxurl, {
+			action: 'wpdt_dismiss_successor_notice',
+			nonce: $('#wpdt-successor-notice').attr('data-nonce')
+		});
+	});
+});
+JS
+		);
+	}
+	function wpdt_dismiss_successor_notice() {
+		if (!current_user_can('activate_plugins')) {
+			wp_send_json_error(null, 403);
+		}
+		if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+			wp_send_json_error(null, 405);
+		}
+		$nonce = isset($_POST['nonce']) && is_string($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+		if (!wp_verify_nonce($nonce, 'wpdt_dismiss_successor_notice')) {
+			wp_send_json_error(null, 403);
+		}
+		$user_id = get_current_user_id();
+		update_user_meta($user_id, 'wpdt_successor_notice_dismissed', 1);
+		if (!get_user_meta($user_id, 'wpdt_successor_notice_dismissed', true)) {
+			wp_send_json_error(null, 500);
+		}
+		wp_send_json_success();
+	}
 	function wpdt_css(){
 		if(is_admin() || is_feed()){return;}
 		$opt = wpdt_get_options();
@@ -591,6 +670,7 @@
 	<?php wp_nonce_field('wpdt_save_settings'); ?>
 	<div class="wrap">									
 		<h2><?php esc_html_e('WP-dTree General Settings','wp-dtree-30'); ?></h2>				
+		<?php wpdt_render_successor_notice(); ?>
 		<table class="optiontable" width="80%">
 			<fieldset class="options">
 			<tr><td valign="top">
